@@ -1,10 +1,12 @@
 import bpy
 
 from .preference import Preference
+from .state      import State
 
 properties = {
     bpy.types.Scene: {
-        "stree_preference": bpy.props.PointerProperty(type=Preference)
+        "stree_preference": bpy.props.PointerProperty(type=Preference),
+        "stree_state"     : bpy.props.PointerProperty(type=State)
     }
 }
 
