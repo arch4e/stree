@@ -10,10 +10,12 @@ bl_info = {
 
 if 'bpy' not in locals():
     import bpy
+    from . import properties
     from . import ui
     from . import utils
 else:
     import importlib
+    importlib.reload(properties)
     importlib.reload(ui)
     importlib.reload(utils)
 
@@ -29,6 +31,8 @@ def register():
     try:
         for cls in utils.register.class_list:
             bpy.utils.register_class(cls)
+
+        properties.register()
     except Exception as e:
         print('error: registration failed')
         print(repr(e))
@@ -38,6 +42,8 @@ def unregister():
     try:
         for cls in reversed(utils.register.class_list):
             bpy.utils.unregister_class(cls)
+
+        properties.unregister()
     except Exception as e:
         print('error: unregistration failed')
         print(repr(e))
