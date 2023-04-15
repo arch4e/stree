@@ -10,9 +10,11 @@ bl_info = {
 
 if 'bpy' not in locals():
     import bpy
+    from . import ui
     from . import utils
 else:
     import importlib
+    importlib.reload(ui)
     importlib.reload(utils)
 
 def check_blender_version():
