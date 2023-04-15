@@ -10,11 +10,13 @@ bl_info = {
 
 if 'bpy' not in locals():
     import bpy
+    from . import operator
     from . import properties
     from . import ui
     from . import utils
 else:
     import importlib
+    importlib.reload(operator)
     importlib.reload(properties)
     importlib.reload(ui)
     importlib.reload(utils)
