@@ -14,6 +14,12 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
         col = self.layout.column()
         if bpy.data.collections.find(context.scene.stree_preference.collection_name) != -1:
             #
+            # revert button
+            #
+            col.prop(context.scene.stree_state, "revert_destination", text="dest")
+            col.operator("stree.revert_objects", text="revert")
+
+            #
             # snapshot list
             #
             box = col.box().column(align=True)

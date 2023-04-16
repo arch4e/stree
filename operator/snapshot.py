@@ -6,6 +6,69 @@ from ..utils.collection import hide_collections
 from ..utils.register   import dcr_register
 
 @dcr_register
+class RevertObjects(bpy.types.Operator):
+    bl_idname      = "stree.revert_objects"
+    bl_label       = "Revert Objects"
+    bl_description = "Revert Objects"
+
+    def execute(self, context):
+        # this function works only in object mode only
+        if bpy.context.mode != 'OBJECT':
+            return { 'CANCELLED' }
+
+        try:
+            bpy.ops.object.select_all(action='DESELECT')
+
+            backup_values = (
+                                bpy.data.collections[context.scene.stree_preference.collection_name].hide_select,
+                                bpy.data.collections[context.scene.stree_state.head].hide_select
+                            )
+            bpy.data.collections[context.scene.stree_preference.collection_name].hide_select = False
+            bpy.data.collections[context.scene.stree_state.head].hide_select                 = False
+
+            #
+            # select revert objects
+            #
+            if context.scene.stree_state.head != "":
+                revert_objects = [x for (_, x) in bpy.data.collections[context.scene.stree_state.head].objects.items()]
+
+            for obj in revert_objects:
+                obj.select_set(True)
+
+            #
+            # revert objects
+            #
+            duplicated_objects = [obj.copy() for obj in bpy.context.selected_objects]
+            for o in duplicated_objects:
+                o.data = o.data.copy()
+                bpy.data.collections[context.scene.stree_state.revert_destination].objects.link(o)
+
+            #
+            # rename objects
+            #
+            for o in duplicated_objects:
+                object_name = o.name
+                object_name = re.sub(rf'^\d*{context.scene.stree_preference.snapshot_suffix}.', '', object_name)
+                object_name = re.sub(rf'{context.scene.stree_preference.snapshot_suffix}\.\d*$', '', object_name)
+                o.name = o.data.name = f'rev_{object_name}'
+            (
+                bpy.data.collections[context.scene.stree_preference.collection_name].hide_select,
+                bpy.data.collections[context.scene.stree_state.head].hide_select
+            ) = backup_values
+
+            #
+            # back to workspace
+            #
+            context.scene.stree_state.head = ""
+            switch_all_collection_visibility("show")
+            bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = True
+
+            return { 'CANCELLED' }
+        except Exception as e:
+            print(e)
+            return { 'CANCELLED' }
+
+@dcr_register
 class TakeSnapshot(bpy.types.Operator):
     bl_idname      = 'stree.take_snapshot'
     bl_label       = "Take Snapshot"
