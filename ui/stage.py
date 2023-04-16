@@ -18,8 +18,9 @@ class StagePanel(BasePanel, bpy.types.Panel):
             layout.label(text='N/A')
         else:
             col = layout.column()
-            box = col.box().column(align=True)
+            col.operator("stree.take_snapshot", text="take snapshot")
 
+            box = col.box().column(align=True)
             for (obj_name, obj) in objects:
                 if obj.type in ['MESH', 'CURVE'] and not (context.scene.stree_preference.snapshot_suffix in obj_name):
                     row = box.row()
