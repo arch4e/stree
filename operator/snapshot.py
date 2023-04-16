@@ -58,6 +58,54 @@ class TakeSnapshot(bpy.types.Operator):
             print(e)
             return { 'CANCELLED' }
 
+@dcr_register
+class ViewSnapshot(bpy.types.Operator):
+    bl_idname      = 'stree.view_snapshot'
+    bl_label       = 'View Snapshot'
+    bl_description = 'View snapshot'
+
+    focus: bpy.props.StringProperty()
+
+    def execute(self, context):
+        if bpy.context.mode != 'OBJECT' \
+           or bpy.context.scene.stree_state.head == self.focus:
+            return { 'CANCELLED' }
+
+        try:
+            #
+            # view snapshot
+            #
+            if bpy.context.scene.stree_state.head == "":
+                switch_all_collection_visibility("hide")
+
+                # show snapshot
+                bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = False
+                bpy.data.collections[self.focus].hide_viewport = False
+
+            #
+            # back to workspace
+            #
+            else:
+                if self.focus == "":
+                    switch_all_collection_visibility("show")
+
+                    # hide snapshots
+                    bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = True
+                else:
+                    bpy.data.collections[bpy.context.scene.stree_state.head].hide_viewport = True
+                    bpy.data.collections[self.focus].hide_viewport = False
+
+            #
+            # update head
+            #
+            context.scene.stree_state.head = self.focus
+
+            return { 'FINISHED' }
+        except Exception as e:
+            context.scene.stree_state.head = ""
+            print(e)
+            return { 'CANCELLED' }
+
 def create_new_collection(collection_name, parent_collection):
     # create collection
     collection = bpy.data.collections.new(collection_name)
@@ -72,3 +120,7 @@ def select_staged_objects():
     for obj_name in staged_objects:
         if obj_name in [x for (x, _) in bpy.data.objects.items()]:
             bpy.data.objects[obj_name].select_set(True)
+
+def switch_all_collection_visibility(flag):
+    for _, collection in bpy.data.collections.items():
+        collection.hide_viewport = False if flag == "show" else True
