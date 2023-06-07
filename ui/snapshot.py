@@ -29,7 +29,7 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
                          icon="RADIOBUT_ON" if context.scene.stree_state.head == "" else "RADIOBUT_OFF",
                          text=f"working area",
                          emboss=False).focus = ""
-            for c, _ in bpy.data.collections[context.scene.stree_preference.collection_name].children.items():
+            for c, _ in reversed(bpy.data.collections[context.scene.stree_preference.collection_name].children.items()):
                 row = box.row()
                 row.alignment = "LEFT"
                 row.operator("stree.view_snapshot",
