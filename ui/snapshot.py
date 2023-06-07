@@ -11,18 +11,23 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
     bl_options = {'HEADER_LAYOUT_EXPAND'}
 
     def draw(self, context):
-        col = self.layout.column()
         if bpy.data.collections.find(context.scene.stree_preference.collection_name) != -1:
+            # +---layout -----------+
+            # | ss_area | ctrl_area |
+            # +---------------------+
+            layout    = self.layout.row()
+            ss_area   = layout.column()
+            ctrl_area = layout.column()
+
             #
-            # revert button
+            # revert direction selecter
             #
-            col.prop(context.scene.stree_state, "revert_destination", text="dest")
-            col.operator("stree.revert_objects", text="revert")
+            ss_area.prop(context.scene.stree_state, "revert_destination", text="dest")
 
             #
             # snapshot list
             #
-            box = col.box().column(align=True)
+            box = ss_area.box().column(align=True)
             row = box.row()
             row.alignment = "LEFT"
             row.operator("stree.view_snapshot",
@@ -36,3 +41,24 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
                              icon="RADIOBUT_ON" if c == context.scene.stree_state.head else "RADIOBUT_OFF",
                              text=f"{c}",
                              emboss=False).focus = c
+
+            #
+            # control button
+            #
+            ctrl_area.operator("stree.revert_objects", # revert
+                               icon="LOOP_BACK",
+                               text="",
+                               emboss=False)
+            ctrl_area.operator("stree.view_snapshot", # back to workarea
+                               icon="CHECKMARK",
+                               text="",
+                               emboss=False).focus = ""
+            ctrl_area.operator("stree.shift_focus", # increment head
+                               icon="TRIA_UP",
+                               text="",
+                               emboss=False).direction = "NEW"
+            ctrl_area.operator("stree.shift_focus", # decrement head
+                               icon="TRIA_DOWN",
+                               text="",
+                               emboss=False).direction = "OLD"
+

@@ -169,6 +169,46 @@ class ViewSnapshot(bpy.types.Operator):
             print(e)
             return { 'CANCELLED' }
 
+@dcr_register
+class ShiftFocus(bpy.types.Operator):
+    bl_idname      = 'stree.shift_focus'
+    bl_label       = 'Shift Focus'
+    bl_description = 'Shift Focus'
+
+    direction: bpy.props.StringProperty()
+
+    def execute(self, context):
+        try:
+            target = ''
+            ss_id = context.scene.stree_state.head
+
+            if self.direction == 'NEW':
+                if ss_id == '':
+                    return { 'FINISHED' }
+                else:
+                    ss_id = int(ss_id.split('.')[0]) + 1
+            elif self.direction == 'OLD':
+                if ss_id == '':
+                    ss_id = len(bpy.data.collections[context.scene.stree_preference.collection_name].children.items()) - 1
+                else:
+                    ss_id = int(ss_id.split('.')[0]) - 1
+                    if ss_id < 0:
+                        return { 'FINISHED' }
+            else:
+                return { 'CANCELLED' }
+
+            target = ''.join([str(ss_id), context.scene.stree_preference.snapshot_suffix])
+            if bpy.data.collections.find(target) != -1:
+                bpy.ops.stree.view_snapshot(focus=target)
+            else:
+                bpy.ops.stree.view_snapshot(focus='')
+
+            return { 'FINISHED' }
+        except Exception as e:
+            context.scene.stree_state.head = ''
+            print(e)
+            return { 'CANCELLED' }
+
 def create_new_collection(collection_name, parent_collection):
     # create collection
     collection = bpy.data.collections.new(collection_name)
