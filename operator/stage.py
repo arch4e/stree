@@ -1,14 +1,14 @@
+# -*- coding: utf-8 -*-
 import bpy
 
-from ..utils.register import dcr_register
 
 staged_objects = []
 
-@dcr_register
+
 class ChangeStageState(bpy.types.Operator):
-    bl_idname      = 'stree.change_stage_state'
-    bl_label       = 'stree: Change Stage State'
-    bl_description = 'The selected object is the target of the snapshot.'
+    bl_idname      = "stree.change_stage_state"
+    bl_label       = "stree: Change Stage State"
+    bl_description = "The selected object is the target of the snapshot."
 
     obj_name: bpy.props.StringProperty()
 
@@ -19,8 +19,9 @@ class ChangeStageState(bpy.types.Operator):
             else:
                 staged_objects.append(self.obj_name)
 
-            return { 'FINISHED' }
+            return { "FINISHED" }
 
         except Exception as e:
             print(e)
-            return { 'CANCELLED' }
+            return { "CANCELLED" }
+
