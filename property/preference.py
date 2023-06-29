@@ -13,3 +13,7 @@ class Preference(bpy.types.PropertyGroup):
     #
     snapshot_suffix: bpy.props.StringProperty(default=".stree") # noqa: F722
 
+    display_limit_is_enabled: bpy.props.BoolProperty(default=True)
+
+    display_limit: bpy.props.IntProperty(default=10)
+
