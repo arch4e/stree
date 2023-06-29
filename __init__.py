@@ -41,8 +41,8 @@ classes = [
     StateProps,
 
     # ui
-    SnapshotPanel,
-    StagePanel
+    StagePanel,
+    SnapshotPanel
 ]
 
 
