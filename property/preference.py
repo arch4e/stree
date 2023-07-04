@@ -9,6 +9,11 @@ class Preference(bpy.types.PropertyGroup):
     collection_name: bpy.props.StringProperty(default=".stree") # noqa: F722
 
     #
+    # branch
+    #
+    branch_suffix: bpy.props.StringProperty(default=".sbr") # noqa: F72
+
+    #
     # snapshot
     #
     snapshot_suffix: bpy.props.StringProperty(default=".stree") # noqa: F722

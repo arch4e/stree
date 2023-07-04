@@ -41,12 +41,12 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
             if context.scene.stree_preference.display_limit_is_enabled:
                 snapshots = get_snapshot_list(
                     list(reversed(
-                        bpy.data.collections[context.scene.stree_preference.collection_name].children.keys()
+                        bpy.data.collections[context.scene.stree_state.current_branch].children.keys()
                     ))
                 )
             else:
                 snapshots = list(reversed(
-                    bpy.data.collections[context.scene.stree_preference.collection_name].children.keys()
+                    bpy.data.collections[context.scene.stree_state.current_branch].children.keys()
                 ))
 
             for c in snapshots:
