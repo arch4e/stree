@@ -50,12 +50,16 @@ class SnapshotPanel(BasePanel, bpy.types.Panel):
                 ))
 
             for c in snapshots:
-                row = box.row()
-                row.alignment = "LEFT"
+                row = box.row(align=True)
                 row.operator("stree.view_snapshot",
                              icon="RADIOBUT_ON" if c == context.scene.stree_state.head else "RADIOBUT_OFF",
                              text=f"{c}",
                              emboss=False).focus = c
+
+                # allow deleting snapshots only while viewing the working area,
+                # since deleting a snapshot while viewing will cause a head reference error
+                if context.scene.stree_state.head == "":
+                    row.operator("stree.delete_snapshot", icon="TRASH", text="").target = c
 
             #
             # control button

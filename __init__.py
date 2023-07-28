@@ -6,7 +6,7 @@ import bpy
 # import local modules
 #
 from .operator.branch import CreateBranch
-from .operator.snapshot import RevertObjects, TakeSnapshot, ViewSnapshot, ShiftFocus
+from .operator.snapshot import DeleteSnapshot, RevertObjects, TakeSnapshot, ViewSnapshot, ShiftFocus
 from .operator.stage import ChangeStageState
 from .property.preference import Preference as PreferenceProps
 from .property.state import State as StateProps
@@ -33,6 +33,7 @@ bl_info = {
 classes = [
     # operator
     CreateBranch,
+    DeleteSnapshot,
     RevertObjects,
     TakeSnapshot,
     ViewSnapshot,

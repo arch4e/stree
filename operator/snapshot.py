@@ -7,6 +7,22 @@ from .stage import staged_objects
 from ..util.collection import create_collection, hide_collections
 
 
+class DeleteSnapshot(bpy.types.Operator):
+    bl_idname      = "stree.delete_snapshot"
+    bl_label       = "Delete Snapshot"
+    bl_description = "Delete Snapshot"
+
+    target: bpy.props.StringProperty()
+
+    def execute(self, context):
+        # this function works only in object mode only
+        if bpy.context.mode != "OBJECT":
+            return { "CANCELLED" }
+        else:
+            delete_snapshot_objects(self.target)
+            return { "FINISHED" }
+
+
 class RevertObjects(bpy.types.Operator):
     bl_idname      = "stree.revert_objects"
     bl_label       = "Revert Objects"
@@ -229,6 +245,35 @@ class ShiftFocus(bpy.types.Operator):
             context.scene.stree_state.head = ""
             print(e)
             return { "CANCELLED" }
+
+
+def delete_snapshot_objects(target):
+    # backup selected objects
+    backup_selected_objects = bpy.context.selected_objects
+
+    # deselect all objects
+    bpy.ops.object.select_all(action="DESELECT")
+
+    # switch focus collection
+    bpy.ops.stree.view_snapshot = target
+
+    # select child objects
+    target_objects = [x for (_, x) in bpy.data.collections[target].objects.items()]
+    for obj in target_objects:
+        obj.select_set(True)
+
+    # delete child objects
+    bpy.ops.object.delete(use_global=False)
+
+    # delete snapshot collection
+    bpy.data.collections.remove(bpy.data.collections[target])
+
+    # back to working area
+    bpy.ops.stree.view_snapshot = ""
+
+    # restore selected status
+    for obj in backup_selected_objects:
+        obj.select_set(True)
 
 
 def select_staged_objects():
