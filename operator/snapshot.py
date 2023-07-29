@@ -113,8 +113,8 @@ class TakeSnapshot(bpy.types.Operator):
             #
             # create snapshot collection
             #
-            snapshot_name = f"{len(bpy.data.collections[context.scene.stree_state.current_branch].children.items())}" \
-                            + context.scene.stree_preference.snapshot_suffix
+            snapshot_id   = calc_snapshot_id()
+            snapshot_name = str(snapshot_id) + context.scene.stree_preference.snapshot_suffix
 
             if context.scene.stree_state.current_branch != context.scene.stree_preference.collection_name \
                and context.scene.stree_state.current_branch != f"main{context.scene.stree_preference.branch_suffix}":
@@ -245,6 +245,16 @@ class ShiftFocus(bpy.types.Operator):
             context.scene.stree_state.head = ""
             print(e)
             return { "CANCELLED" }
+
+
+def calc_snapshot_id():
+    snapshots = [x for (x, _) in bpy.data.collections[bpy.context.scene.stree_state.current_branch].children.items()]
+    if len(snapshots) >= 1: # not empty
+        newest_snapshot = snapshots[-1]
+        snapshot_id = int(newest_snapshot.split('.')[0]) + 1
+        return snapshot_id
+    else: # empty list
+        return 1
 
 
 def delete_snapshot_objects(target):
