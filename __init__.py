@@ -24,7 +24,7 @@ bl_info = {
     "category"   : "3D View",
     "location"   : "View3D > Sidebar > stree",
     "description": "",
-    "version"    : (0,0,1),
+    "version"    : (0,1,0),
     "blender"    : (3,0,0),
     "author"     : "arch4e"
 }
