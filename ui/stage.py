@@ -14,19 +14,17 @@ class StagePanel(BasePanel, bpy.types.Panel):
         layout  = self.layout
         objects = bpy.data.objects.items()
 
-        if len(objects) <= 0 or context.scene.stree_state.head != "":
-            layout.label(text="N/A")
-        else:
-            col = layout.column()
-            col.operator("stree.take_snapshot", text="take snapshot")
+        col = layout.column()
+        col.enabled = True if context.scene.stree_state.head == "" else False
+        col.operator("stree.take_snapshot", text="take snapshot")
 
-            box = col.box().column(align=True)
-            for (obj_name, obj) in objects:
-                if obj.type in ["MESH", "CURVE"] and not (context.scene.stree_preference.snapshot_suffix in obj_name):
-                    row = box.row()
-                    row.alignment = "LEFT"
-                    row.operator("stree.change_stage_state",
-                                 icon="RADIOBUT_ON" if obj_name in staged_objects else "RADIOBUT_OFF",
-                                 text=f"{obj_name}",
-                                 emboss=False).obj_name = obj_name
+        box = col.box().column(align=True)
+        for (obj_name, obj) in objects:
+            if obj.type in ["MESH", "CURVE"] and not (context.scene.stree_preference.snapshot_suffix in obj_name):
+                row = box.row()
+                row.alignment = "LEFT"
+                row.operator("stree.change_stage_state",
+                             icon="CHECKBOX_HLT" if obj_name in staged_objects else "CHECKBOX_DEHLT",
+                             text=f"{obj_name}",
+                             emboss=False).obj_name = obj_name
 

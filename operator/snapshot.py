@@ -4,7 +4,23 @@ import re
 
 
 from .stage import staged_objects
-from ..util.collection import hide_collections
+from ..util.collection import create_collection, hide_collections
+
+
+class DeleteSnapshot(bpy.types.Operator):
+    bl_idname      = "stree.delete_snapshot"
+    bl_label       = "Delete Snapshot"
+    bl_description = "Delete Snapshot"
+
+    target: bpy.props.StringProperty()
+
+    def execute(self, context):
+        # this function works only in object mode only
+        if bpy.context.mode != "OBJECT":
+            return { "CANCELLED" }
+        else:
+            delete_snapshot_objects(self.target)
+            return { "FINISHED" }
 
 
 class RevertObjects(bpy.types.Operator):
@@ -22,9 +38,11 @@ class RevertObjects(bpy.types.Operator):
 
             backup_values = (
                 bpy.data.collections[context.scene.stree_preference.collection_name].hide_select,
+                bpy.data.collections[context.scene.stree_state.current_branch].hide_select,
                 bpy.data.collections[context.scene.stree_state.head].hide_select
             )
             bpy.data.collections[context.scene.stree_preference.collection_name].hide_select = False
+            bpy.data.collections[context.scene.stree_state.current_branch].hide_select       = False
             bpy.data.collections[context.scene.stree_state.head].hide_select                 = False
 
             #
@@ -52,8 +70,13 @@ class RevertObjects(bpy.types.Operator):
                 object_name = re.sub(rf"^\d*{context.scene.stree_preference.snapshot_suffix}.", "", object_name)
                 object_name = re.sub(rf"{context.scene.stree_preference.snapshot_suffix}\.\d*$", "", object_name)
                 o.name = o.data.name = f"rev_{object_name}"
+
+            #
+            # restore backup values
+            #
             (
                 bpy.data.collections[context.scene.stree_preference.collection_name].hide_select,
+                bpy.data.collections[context.scene.stree_state.current_branch].hide_select,
                 bpy.data.collections[context.scene.stree_state.head].hide_select
             ) = backup_values
 
@@ -64,7 +87,7 @@ class RevertObjects(bpy.types.Operator):
             switch_all_collection_visibility("show")
             bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = True
 
-            return { "CANCELLED" }
+            return { "FINISHED" }
         except Exception as e:
             print(e)
             return { "CANCELLED" }
@@ -85,14 +108,19 @@ class TakeSnapshot(bpy.types.Operator):
             # init
             #
             if bpy.data.collections.find(context.scene.stree_preference.collection_name) == -1:
-                create_new_collection(context.scene.stree_preference.collection_name, bpy.context.scene.collection)
+                create_collection(context.scene.stree_preference.collection_name, bpy.context.scene.collection)
 
             #
             # create snapshot collection
             #
-            snapshot_name = f"{len(bpy.data.collections[context.scene.stree_preference.collection_name].children.items())}" \
-                            + f"{context.scene.stree_preference.snapshot_suffix}"
-            create_new_collection(snapshot_name, bpy.data.collections[context.scene.stree_preference.collection_name])
+            snapshot_id   = calc_snapshot_id()
+            snapshot_name = str(snapshot_id) + context.scene.stree_preference.snapshot_suffix
+
+            if context.scene.stree_state.current_branch != context.scene.stree_preference.collection_name \
+               and context.scene.stree_state.current_branch != f"main{context.scene.stree_preference.branch_suffix}":
+                snapshot_name += f".{context.scene.stree_state.current_branch}"
+
+            create_collection(snapshot_name, bpy.data.collections[context.scene.stree_state.current_branch])
 
             #
             # define variables
@@ -144,6 +172,7 @@ class ViewSnapshot(bpy.types.Operator):
 
                 # show snapshot
                 bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = False
+                bpy.data.collections[context.scene.stree_state.current_branch].hide_viewport       = False
                 bpy.data.collections[self.focus].hide_viewport = False
 
             #
@@ -155,6 +184,7 @@ class ViewSnapshot(bpy.types.Operator):
 
                     # hide snapshots
                     bpy.data.collections[context.scene.stree_preference.collection_name].hide_viewport = True
+                    bpy.data.collections[context.scene.stree_state.current_branch].hide_viewport       = True
                 else:
                     bpy.data.collections[bpy.context.scene.stree_state.head].hide_viewport = True
                     bpy.data.collections[self.focus].hide_viewport = False
@@ -190,7 +220,7 @@ class ShiftFocus(bpy.types.Operator):
                     ss_id = int(ss_id.split(".")[0]) + 1
             elif self.direction == "OLD":
                 if ss_id == "":
-                    ss_id = len(bpy.data.collections[context.scene.stree_preference.collection_name].children.items()) - 1
+                    ss_id = len(bpy.data.collections[context.scene.stree_state.current_branch].children.items()) - 1
                 else:
                     ss_id = int(ss_id.split(".")[0]) - 1
                     if ss_id < 0:
@@ -199,6 +229,12 @@ class ShiftFocus(bpy.types.Operator):
                 return { "CANCELLED" }
 
             target = "".join([str(ss_id), context.scene.stree_preference.snapshot_suffix])
+
+            # main branch or None
+            if context.scene.stree_state.current_branch != context.scene.stree_preference.collection_name \
+               and context.scene.stree_state.current_branch != f"main{context.scene.stree_preference.branch_suffix}":
+                target += f".{context.scene.stree_state.current_branch}"
+
             if bpy.data.collections.find(target) != -1:
                 bpy.ops.stree.view_snapshot(focus=target)
             else:
@@ -211,13 +247,43 @@ class ShiftFocus(bpy.types.Operator):
             return { "CANCELLED" }
 
 
-def create_new_collection(collection_name, parent_collection):
-    # create collection
-    collection = bpy.data.collections.new(collection_name)
+def calc_snapshot_id():
+    snapshots = [x for (x, _) in bpy.data.collections[bpy.context.scene.stree_state.current_branch].children.items()]
+    if len(snapshots) >= 1: # not empty
+        newest_snapshot = snapshots[-1]
+        snapshot_id = int(newest_snapshot.split('.')[0]) + 1
+        return snapshot_id
+    else: # empty list
+        return 1
 
-    # link collection to scene
-    if parent_collection is not None:
-        parent_collection.children.link(collection)
+
+def delete_snapshot_objects(target):
+    # backup selected objects
+    backup_selected_objects = bpy.context.selected_objects
+
+    # deselect all objects
+    bpy.ops.object.select_all(action="DESELECT")
+
+    # switch focus collection
+    bpy.ops.stree.view_snapshot = target
+
+    # select child objects
+    target_objects = [x for (_, x) in bpy.data.collections[target].objects.items()]
+    for obj in target_objects:
+        obj.select_set(True)
+
+    # delete child objects
+    bpy.ops.object.delete(use_global=False)
+
+    # delete snapshot collection
+    bpy.data.collections.remove(bpy.data.collections[target])
+
+    # back to working area
+    bpy.ops.stree.view_snapshot = ""
+
+    # restore selected status
+    for obj in backup_selected_objects:
+        obj.select_set(True)
 
 
 def select_staged_objects():

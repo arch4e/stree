@@ -5,10 +5,12 @@ import bpy
 #
 # import local modules
 #
-from .operator.snapshot import RevertObjects, TakeSnapshot, ViewSnapshot, ShiftFocus
+from .operator.branch import CreateBranch
+from .operator.snapshot import DeleteSnapshot, RevertObjects, TakeSnapshot, ViewSnapshot, ShiftFocus
 from .operator.stage import ChangeStageState
 from .property.preference import Preference as PreferenceProps
 from .property.state import State as StateProps
+from .ui.branch import BranchPanel
 from .ui.snapshot import SnapshotPanel
 from .ui.stage import StagePanel
 from .util.props_register import register as props_register, unregister as props_unregister
@@ -22,7 +24,7 @@ bl_info = {
     "category"   : "3D View",
     "location"   : "View3D > Sidebar > stree",
     "description": "",
-    "version"    : (0,0,1),
+    "version"    : (0,1,0),
     "blender"    : (3,0,0),
     "author"     : "arch4e"
 }
@@ -30,6 +32,8 @@ bl_info = {
 
 classes = [
     # operator
+    CreateBranch,
+    DeleteSnapshot,
     RevertObjects,
     TakeSnapshot,
     ViewSnapshot,
@@ -41,8 +45,9 @@ classes = [
     StateProps,
 
     # ui
-    SnapshotPanel,
-    StagePanel
+    BranchPanel,
+    StagePanel,
+    SnapshotPanel
 ]
 
 
